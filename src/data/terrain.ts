@@ -1,5 +1,6 @@
 import { getPokemonNameWithAffix } from "#app/messages";
 import type { BattlerIndex } from "#enums/battler-index";
+import { MoveTarget } from "#enums/MoveTarget";
 import { PokemonType } from "#enums/pokemon-type";
 import type { Pokemon } from "#field/pokemon";
 import type { Move } from "#moves/move";
@@ -57,10 +58,22 @@ export class Terrain {
     return 1;
   }
 
+  isSpreadOrFieldMove(move: Move): boolean {
+    switch (move.moveTarget) {
+      case MoveTarget.ALL_ENEMIES:
+      case MoveTarget.ALL_NEAR_ENEMIES:
+      case MoveTarget.ALL_OTHERS:
+      case MoveTarget.ALL_NEAR_OTHERS:
+      case MoveTarget.BOTH_SIDES:
+        return true;
+    }
+    return false;
+  }
+
   isMoveTerrainCancelled(user: Pokemon, targets: BattlerIndex[], move: Move): boolean {
     switch (this.terrainType) {
       case TerrainType.PSYCHIC:
-        if (!move.hasAttr("ProtectAttr")) {
+        if (!move.hasAttr("ProtectAttr") && !this.isSpreadOrFieldMove(move)) {
           // Cancels move if the move has positive priority and targets a Pokemon grounded on the Psychic Terrain
           return (
             move.getPriority(user) > 0 &&
