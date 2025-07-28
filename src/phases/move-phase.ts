@@ -122,14 +122,8 @@ export class MovePhase extends BattlePhase {
 
     console.log(MoveId[this.move.moveId], enumValueToKey(MoveUseMode, this.useMode));
 
-    // Check if move is unusable (e.g. running out of PP due to a mid-turn Spite
-    // or the user no longer being on field), ending the phase early if not.
-    if (!this.canMove(true)) {
-      if (this.pokemon.isActive(true)) {
-        this.fail();
-        this.showMoveText();
-        this.showFailedText();
-      }
+    if (!this.pokemon.isActive(true)) {
+      this.cancel();
       this.end();
       return;
     }
@@ -157,6 +151,7 @@ export class MovePhase extends BattlePhase {
 
     this.resolveCounterAttackTarget();
 
+    // Check status cancellation from sleep, freeze, etc.
     this.resolvePreMoveStatusEffects();
 
     this.lapsePreMoveAndMoveTags();
@@ -181,6 +176,18 @@ export class MovePhase extends BattlePhase {
   protected resolveFinalPreMoveCancellationChecks(): void {
     const targets = this.getActiveTargetPokemon();
     const moveQueue = this.pokemon.getMoveQueue();
+
+    // Check if move is unusable (e.g. running out of PP due to a mid-turn Spite
+    // or the user no longer being on field)
+
+    if (!this.canMove(true)) {
+      if (this.pokemon.isActive(true)) {
+        this.fail();
+        this.showMoveText();
+        this.showFailedText();
+      }
+      return;
+    }
 
     if (
       (targets.length === 0 && !this.move.getMove().hasAttr("AddArenaTrapTagAttr")) ||
